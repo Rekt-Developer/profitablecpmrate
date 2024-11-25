@@ -4,20 +4,9 @@ import random
 import matplotlib.pyplot as plt
 from datetime import datetime
 
-# URLs for the proxy lists
-https_proxy_url = [
-    "https://raw.githubusercontent.com/r00tee/Proxy-List/main/Https.txt",
-    "https://raw.githubusercontent.com/hw630590/free-proxies/refs/heads/main/proxies/http/http.txt",
-    "https://raw.githubusercontent.com/hw630590/free-proxies/refs/heads/main/proxies/https/https.txt"
-]
-socks4_proxy_url = [
-    "https://raw.githubusercontent.com/r00tee/Proxy-List/main/Socks4.txt",
-    "https://raw.githubusercontent.com/hw630590/free-proxies/refs/heads/main/proxies/socks4/socks4.txt"
-]
-socks5_proxy_url = [
-    "https://raw.githubusercontent.com/r00tee/Proxy-List/main/Socks5.txt",
-    "https://raw.githubusercontent.com/hw630590/free-proxies/refs/heads/main/proxies/socks5/socks5.txt"
-]
+# URLs for the proxy APIs
+geonode_proxy_url = "https://proxylist.geonode.com/api/proxy-list?limit=500&page=1&sort_by=lastChecked&sort_type=desc"
+proxyscrape_proxy_url = "https://api.proxyscrape.com/v4/free-proxy-list/get?request=display_proxies&proxy_format=protocolipport&format=json"
 
 # Target URL
 url = "https://www.profitablecpmrate.com/tgzx4x7534?key=6ef5bb925723a00f5a280cee80cfc569"
@@ -49,24 +38,23 @@ def generate_headers():
         "Referer": "https://www.google.com",
     }
 
-# Function to get proxies from a URL
-async def get_proxies(proxy_url):
+# Function to get proxies from Geonode API
+async def get_geonode_proxies():
     async with aiohttp.ClientSession() as session:
-        async with session.get(proxy_url) as response:
+        async with session.get(geonode_proxy_url) as response:
             if response.status == 200:
-                return [line.strip() for line in (await response.text()).splitlines() if line.strip()]
+                data = await response.json()
+                return [f"{entry['ip']}:{entry['port']}" for entry in data.get("data", [])]
             return []
 
-# Load proxies
-https_proxies = []
-socks4_proxies = []
-socks5_proxies = []
-
-async def load_proxies(proxy_urls, proxy_list):
-    tasks = [get_proxies(url) for url in proxy_urls]
-    results = await asyncio.gather(*tasks)
-    for result in results:
-        proxy_list.extend(result)
+# Function to get proxies from ProxyScrape API
+async def get_proxyscrape_proxies():
+    async with aiohttp.ClientSession() as session:
+        async with session.get(proxyscrape_proxy_url) as response:
+            if response.status == 200:
+                data = await response.json()
+                return data.get("proxies", [])
+            return []
 
 # Function to validate proxy (async)
 async def validate_proxy(proxy):
@@ -163,16 +151,17 @@ async def main():
     # Simulate revenue (e.g., $0.01 per click)
     revenue_per_click = 0.01
 
-    # Load proxies
-    await load_proxies(https_proxy_url, https_proxies)
-    await load_proxies(socks4_proxy_url, socks4_proxies)
-    await load_proxies(socks5_proxy_url, socks5_proxies)
+    # Load proxies from APIs
+    geonode_proxies = await get_geonode_proxies()
+    proxyscrape_proxies = await get_proxyscrape_proxies()
 
-    all_proxies = https_proxies + socks4_proxies + socks5_proxies
+    all_proxies = geonode_proxies + proxyscrape_proxies
 
     # Validate proxies asynchronously
     tasks = [validate_proxy(p) for p in all_proxies]
     valid_proxies = [p for p, valid in zip(all_proxies, await asyncio.gather(*tasks)) if valid]
+
+    print(f"Total valid proxies: {len(valid_proxies)}")
 
     for proxy in valid_proxies:
         await make_request_with_proxy(proxy)
