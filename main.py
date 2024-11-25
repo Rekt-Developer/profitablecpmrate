@@ -104,8 +104,7 @@ def update_markdown_log():
 - **Daily Revenue Goal:** ${daily_revenue_goal} (Achieved: {'Yes' if revenue >= daily_revenue_goal else 'No'})
 
 ## Metrics Over Time
-| Timestamp           | Impressions | Clicks | Success | Failures | Revenue |
-|---------------------|-------------|--------|---------|----------|---------|
+| Timestamp           |
 """
     for record in metrics_history:
         log_content += f"| {record['timestamp']} | {record['impressions']} | {record['clicks']} | {record['success']} | {record['failures']} | ${record['revenue']:.2f} |\n"
@@ -176,11 +175,7 @@ async def main():
     # Validate proxies asynchronously
     proxies = [p for p in all_proxies if await validate_proxy(p)]
 
-    # Create a progress bar
-    progress_bar = tqdm(total=len(proxies), desc="Processing proxies")
-
-    # Make requests using proxies
-    for proxy in proxies:
+    for proxy in tqdm(proxies, desc="Processing proxies"):
         await make_request_with_proxy(proxy)
         revenue = clicks * revenue_per_click
 
@@ -201,63 +196,8 @@ async def main():
         # Print current metrics
         print(f"Metrics: Impressions={impressions}, Clicks={clicks}, CTR={ctr:.2f}%, CPM={cpm:.2f}, Revenue=${revenue:.2f}")
 
-        # Update the progress bar
-        progress_bar.update(1)
-
         # Sleep between requests to avoid detection
         await asyncio.sleep(random.uniform(1, 3))
 
-    progress_bar.close()
-
 if __name__ == "__main__":
     asyncio.run(main())
-
-# Create an HTML file with a user interface to display the metrics
-with open("metrics_report.html", "w") as html_file:
-    html_file.write("<html><body>")
-    html_file.write("<h1>Metrics Report</h1>")
-    html_file.write("<h2>Summary</h2>")
-    html_file.write(f"<p>Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>")
-    html_file.write(f"<p>Impressions: {impressions}</p>")
-    html_file.write(f"<p>Clicks: {clicks}</p>")
-    html_file.write(f"<p>Success: {success}</p>")
-    html_file.write(f"<p>Failures: {failures}</p>")
-    html_file.write(f"<p>CTR: {ctr:.2f}%</p>")
-    html_file.write(f"<p>CPM: ${cpm:.2f}</p>")
-    html_file.write(f"<p>Revenue: ${revenue:.2f}</p>")
-    html_file.write(f"<p>Daily Revenue Goal: ${daily_revenue_goal} (Achieved: {'Yes' if revenue >= daily_revenue_goal else 'No'})</p>")
-    html_file.write("<h2>Metrics Over Time</h2>")
-    html_file.write("<table>")
-    html_file.write("<tr><th>Timestamp</th><th>Impressions</th><th>Clicks</th><th>Success</th><th>Failures</th><th>Revenue</th></tr>")
-    for record in metrics_history:
-        html_file.write(f"<tr><td>{record['timestamp']}</td><td>{record['impressions']}</td><td>{record['clicks']}</td><td>{record['success']}</td><td>{record['failures']}</td><td>${record['revenue']:.2f}</td></tr>")
-    html_file.write("</table>")
-    html_file.write("<img src='metrics_graph.png' alt='Metrics Graph'>")
-    html_file.write("</body></html>")
-
-# Continuously update the HTML file with the latest metrics
-while True:
-    update_markdown_log()
-    plot_metrics()
-    with open("metrics_report.html", "w") as html_file:
-        html_file.write("<html><body>")
-        html_file.write("<h1>Metrics Report</h1>")
-        html_file.write("<h2>Summary</h2>")
-        html_file.write(f"<p>Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>")
-        html_file.write(f"<p>Impressions: {impressions}</p>")
-        html_file.write(f"<p>Clicks: {clicks}</p>")
-        html_file.write(f"<p>Success: {success}</p>")
-        html_file.write(f"<p>Failures: {failures}</p>")
-        html_file.write(f"<p>CTR: {ctr:.2f}%</p>")
-        html_file.write(f"<p>CPM: ${cpm:.2f}</p>")
-        html_file.write(f"<p>Revenue: ${revenue:.2f}</p>")
-        html_file.write(f"<p>Daily Revenue Goal: ${daily_revenue_goal} (Achieved: {'Yes' if revenue >= daily_revenue_goal else 'No'})</p>")
-        html_file.write("<h2>Metrics Over Time</h2>")
-        html_file.write("<table>")
-        html_file.write("<tr><th>Timestamp</th><th>Impressions</th><th>Clicks</th><th>Success</th><th>Failures</th><th>Revenue</th></tr>")
-        for record in metrics_history:
-            html_file.write(f"<tr><td>{record['timestamp']}</td><td>{record['impressions']}</td><td>{record['clicks']}</td><td>{record['success']}</td><td>{record['failures']}</td><td>${record['revenue']:.2f}</td></tr>")
-        html_file.write("</table>")
-        html_file.write("<img src='metrics_graph.png' alt='Metrics Graph'>")
-        html_file.write("</body></html>")
-    time.sleep(60)  # Update every minute
