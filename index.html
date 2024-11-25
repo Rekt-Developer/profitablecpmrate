@@ -1,75 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ProfitableCPMRate - Documentation</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f8f9fa;
-    }
-    .container {
-      max-width: 800px;
-      margin-top: 50px;
-    }
-    h1, h2 {
-      color: #343a40;
-    }
-    pre {
-      background-color: #f1f1f1;
-      padding: 15px;
-      border-radius: 5px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profitable CPM Rate - Ad Campaign Tracker</title>
+    <meta name="description" content="An automated script for tracking ad campaign performance and optimizing revenue.">
+    <meta name="keywords" content="Profitable CPM Rate, ad campaign, tracker, revenue optimization">
+    <meta property="og:title" content="Profitable CPM Rate">
+    <meta property="og:description" content="An automated script for tracking ad campaign performance and optimizing revenue.">
+    <meta property="og:image" content="https://example.com/profitable-cpm-rate-logo.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Profitable CPM Rate">
+    <meta name="twitter:description" content="An automated script for tracking ad campaign performance and optimizing revenue.">
+    <meta name="twitter:image" content="https://example.com/profitable-cpm-rate-logo.png">
+    <link rel="stylesheet" href="styles.css">
+    <script type="text/javascript" src="//pl25013478.profitablecpmrate.com/66/17/d7/6617d7163a895c776c2db7800c9d3306.js"></script>
+    <script type="text/javascript" src="//pl25032294.profitablecpmrate.com/0f/9f/9c/0f9f9c5c85bb14b4da3ce62b002175ec.js"></script>
+    <script type="text/javascript" src="//pl25065815.profitablecpmrate.com/44/b6/6a/44b66a6e9001dbd38d6ede46d83f3a88.js"></script>
+    <script src="script.js"></script>
 </head>
-<body>
+<body onload="init()">
+    <header>
+        <h1>Profitable CPM Rate</h1>
+        <nav>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#ad-placements">Ad Placements</a></li>
+                <li><a href="#stats">Statistics</a></li>
+            </ul>
+        </nav>
+    </header>
 
-  <div class="container">
-    <h1 class="text-center">ProfitableCPMRate Documentation</h1>
+    <main>
+        <section id="home">
+            <h2>Welcome to Profitable CPM Rate</h2>
+            <p>An automated script for tracking ad campaign performance and optimizing revenue.</p>
+        </section>
 
-    <h2>Overview</h2>
-    <p>ProfitableCPMRate is an automated script designed to simulate traffic and clicks, generating detailed metrics for a specific ad campaign. It tracks key performance indicators like Impressions, Clicks, CTR, CPM, and Revenue.</p>
+        <section id="ad-placements">
+            <h2>Ad Placements</h2>
+            <!-- Popunder Ad 1 -->
+            <div class="ad-placement" id="popunderAd1"></div>
 
-    <h2>Features</h2>
-    <ul>
-      <li>Automated proxy rotation</li>
-      <li>Simulated clicks and traffic generation</li>
-      <li>Detailed performance metrics (CTR, CPM, Revenue)</li>
-      <li>Graphical and Markdown reports for performance tracking</li>
-      <li>GitHub Actions automation for periodic execution</li>
-    </ul>
+            <!-- Direct Link Ad -->
+            <a href="https://www.profitablecpmrate.com/tgzx4x7534?key=6ef5bb925723a00f5a280cee80cfc569" class="ad-placement">Direct Link Ad</a>
 
-    <h2>Installation</h2>
-    <p>To run the script locally, clone the repository and install the required dependencies:</p>
-    <pre>
-      git clone https://github.com/Rekt-Developer/profitablecpmrate.git
-      cd profitablecpmrate
-      pip install requests matplotlib
-      python profitablecpmrate_script.py
-    </pre>
+            <!-- Social Bar Ad -->
+            <div class="ad-placement" id="socialBarAd"></div>
+        </section>
 
-    <h2>GitHub Actions Setup</h2>
-    <p>This project can also be automated using GitHub Actions to run the script every 10 minutes. Check the <code>.github/workflows/main.yml</code> for more details on setting up the automation.</p>
+        <section id="stats">
+            <h2>Statistics</h2>
+            <div class="stats-container">
+                <div class="stat-item">
+                    <p>Impressions: <span id="impressions">0</span></p>
+                </div>
+                <div class="stat-item">
+                    <p>Clicks: <span id="clicks">0</span></p>
+                </div>
+                <div class="stat-item">
+                    <p>CTR: <span id="ctr">0%</span></p>
+                </div>
+                <div class="stat-item">
+                    <p>CPM: <span id="cpm">$0.00</span></p>
+                </div>
+                <div class="stat-item">
+                    <p>Revenue: <span id="revenue">$0.00</span></p>
+                </div>
+            </div>
+        </section>
+    </main>
 
-    <h2>Customization</h2>
-    <ul>
-      <li>Change proxy URLs in the script.</li>
-      <li>Modify the revenue per click for better campaign results.</li>
-    </ul>
-
-    <h2>Contribution</h2>
-    <p>We welcome contributions! If you have suggestions or want to improve the script, feel free to open an issue or submit a pull request.</p>
-
-    <h2>License</h2>
-    <p>This project is licensed under the MIT License.</p>
-
-    <footer class="text-center mt-4">
-      <p>&copy; 2024 ProfitableCPMRate</p>
+    <footer>
+        <p>&copy; 2024 Profitable CPM Rate. All rights reserved.</p>
     </footer>
-  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function init() {
+            // Placeholder for actual implementation
+            // This function should initialize and update the statistics
+            // For the sake of this example, we'll just log a message.
+            console.log("Statistics initialization and update in progress...");
+        }
+    </script>
 </body>
 </html>
+
+<style>
+    /* Add your CSS styles here */
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+    }
+
+    header {
+        background-color: #333;
+        color: #fff;
+        padding: 1rem;
+        text-align: center;
+    }
+
+    nav ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    nav li {
+        display: inline;
+        margin-right: 20px;
+    }
+
+    nav a {
+        text-decoration: none;
+        color: #fff;
+        font-weight: bold;
+    }
+
+    main {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        background-color: #fff;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1, h2 {
+        color: #333;
+    }
+
+    .ad-placement {
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background-color: #f4f4f4;
+        border: 1px solid #ddd;
+    }
+
+    .stats-container {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2rem;
+    }
+
+    .stat-item {
+        flex: 1;
+        text-align: center;
+        padding: 1rem;
+        background-color: #f4f4f4;
+        border: 1px solid #ddd;
+    }
+
+    footer {
+        text-align: center;
+        padding: 1rem;
+        background-color: #333;
+        color: #fff;
+    }
+</style>
+
+<script>
+    // Example code to update statistics (replace with actual implementation)
+    const statsContainer = document.querySelector(".stats-container");
+    const impressionsElement = statsContainer.querySelector("#impressions");
+    const clicksElement = statsContainer.querySelector("#clicks");
+    const ctrElement = statsContainer.querySelector("#ctr");
+    const cpmElement = statsContainer.querySelector("#cpm");
+    const revenueElement = statsContainer.querySelector("#revenue");
+
+    // Example update function (replace with actual logic)
+    function updateStats() {
+        const impressions = Math.floor(Math.random() * 10000); // Example: Generate random impressions
+        const clicks = Math.floor(Math.random() * 100); // Example: Generate random clicks
+        const ctr = (clicks / impressions) * 100; // Calculate CTR
+        const cpm = Math.floor(Math.random() * 10) * 1000; // Example: Generate random CPM
+        const revenue = (clicks / 1000) * cpm; // Calculate revenue
+
+        impressionsElement.textContent = impressions;
+        clicksElement.textContent = clicks;
+        ctrElement.textContent = ctr.toFixed(2) + "%";
+        cpmElement.textContent = "$" + (cpm / 1000).toFixed(2);
+        revenueElement.textContent = "$" + revenue.toFixed(2);
+    }
+
+    // Call the update function every 5 seconds (adjust as needed)
+    setInterval(updateStats, 5000);
+</script>
