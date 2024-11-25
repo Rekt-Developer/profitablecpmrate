@@ -1,11 +1,8 @@
 import asyncio
 import aiohttp
 import random
-import time
-import requests
 import matplotlib.pyplot as plt
 from datetime import datetime
-from tqdm import tqdm
 
 # URLs for the proxy lists
 https_proxy_url = [
