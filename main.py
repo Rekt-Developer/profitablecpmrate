@@ -4,9 +4,33 @@ import random
 import matplotlib.pyplot as plt
 from datetime import datetime
 
-# URLs for the proxy APIs
-geonode_proxy_url = "https://proxylist.geonode.com/api/proxy-list?limit=500&page=1&sort_by=lastChecked&sort_type=desc"
-proxyscrape_proxy_url = "https://api.proxyscrape.com/v4/free-proxy-list/get?request=display_proxies&proxy_format=protocolipport&format=json"
+# Advanced URLs for proxy APIs
+proxy_sources = {
+    "geonode": {
+        "url": "https://proxylist.geonode.com/api/proxy-list?limit=500&page=1&sort_by=lastChecked&sort_type=desc",
+        "protocol_key": "protocols",
+        "ip_key": "ip",
+        "port_key": "port"
+    },
+    "proxyscrape": {
+        "url": "https://api.proxyscrape.com/v4/free-proxy-list/get?request=display_proxies&proxy_format=protocolipport&format=json",
+        "protocol_key": None,  # Custom parsing required
+        "ip_key": None,
+        "port_key": None
+    },
+    "brightdata": {
+        "url": "https://brightdata.com/api-proxies",
+        "protocol_key": None,  # Requires API key and structured response
+        "ip_key": "ip",
+        "port_key": "port"
+    },
+    "spys_one": {
+        "url": "http://spys.one/en/free-proxy-list/",
+        "protocol_key": None,
+        "ip_key": None,
+        "port_key": None
+    }
+}
 
 # Target URL
 url = "https://www.profitablecpmrate.com/tgzx4x7534?key=6ef5bb925723a00f5a280cee80cfc569"
@@ -22,7 +46,7 @@ revenue = 0.0
 metrics_history = []
 daily_revenue_goal = 50.0
 
-# Browser-like headers for requests
+# Generate random headers for requests
 def generate_headers():
     return {
         "User-Agent": random.choice([
@@ -38,38 +62,38 @@ def generate_headers():
         "Referer": "https://www.google.com",
     }
 
-# Function to get proxies from Geonode API
-async def get_geonode_proxies():
+# Fetch proxies from API
+async def fetch_proxies(source):
     async with aiohttp.ClientSession() as session:
-        async with session.get(geonode_proxy_url) as response:
+        async with session.get(source["url"]) as response:
             if response.status == 200:
-                data = await response.json()
-                return [f"{entry['ip']}:{entry['port']}" for entry in data.get("data", [])]
+                try:
+                    data = await response.json()
+                    proxies = []
+                    for entry in data.get("data", []):
+                        protocol = entry.get(source["protocol_key"], ["http"])[0]
+                        ip = entry.get(source["ip_key"])
+                        port = entry.get(source["port_key"])
+                        if ip and port:
+                            proxies.append((protocol, f"{ip}:{port}"))
+                    return proxies
+                except Exception as e:
+                    print(f"Error parsing proxies from {source['url']}: {e}")
+                    return []
             return []
 
-# Function to get proxies from ProxyScrape API
-async def get_proxyscrape_proxies():
-    async with aiohttp.ClientSession() as session:
-        async with session.get(proxyscrape_proxy_url) as response:
-            if response.status == 200:
-                data = await response.json()
-                return data.get("proxies", [])
-            return []
-
-# Function to validate proxy (async)
-async def validate_proxy(proxy):
+# Validate proxies asynchronously
+async def validate_proxy(proxy, protocol):
     try:
+        proxy_url = f"{protocol}://{proxy}"
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, proxy=f"http://{proxy}", headers=generate_headers(), timeout=10) as response:
+            async with session.get(url, proxy=proxy_url, headers=generate_headers(), timeout=10) as response:
                 return response.status == 200
-    except Exception as e:
-        print(f"Failed to validate proxy {proxy}: {e}")
+    except Exception:
         return False
 
-# Function to update the Markdown log file
+# Update the Markdown log file
 def update_markdown_log():
-    global impressions, clicks, ctr, cpm, revenue, success, failures
-
     log_content = f"""# Metrics Report
 
 ## Summary
@@ -87,24 +111,20 @@ def update_markdown_log():
 | Timestamp           | Impressions | Clicks | Success | Failures | Revenue |
 |---------------------|-------------|--------|---------|----------|---------|
 """
-
     for record in metrics_history:
         log_content += f"""| {record['timestamp']} | {record['impressions']} | {record['clicks']} | {record['success']} | {record['failures']} | ${record['revenue']:.2f} |\n"""
 
     with open("metrics_report.md", "w") as log_file:
         log_file.write(log_content)
 
-# Function to plot a graph of metrics
+# Plot metrics over time
 def plot_metrics():
-    global metrics_history
-
     timestamps = [record['timestamp'] for record in metrics_history]
     impressions_list = [record['impressions'] for record in metrics_history]
     clicks_list = [record['clicks'] for record in metrics_history]
     revenue_list = [record['revenue'] for record in metrics_history]
 
     plt.figure(figsize=(12, 7))
-
     plt.plot(timestamps, impressions_list, label="Impressions", marker="o")
     plt.plot(timestamps, clicks_list, label="Clicks", marker="x")
     plt.plot(timestamps, revenue_list, label="Revenue", marker="s")
@@ -120,12 +140,13 @@ def plot_metrics():
     plt.savefig("metrics_graph.png")
     plt.close()
 
-# Function to make a request using a proxy
-async def make_request_with_proxy(proxy):
+# Perform requests with proxies
+async def make_request_with_proxy(proxy, protocol):
     global impressions, clicks, ctr, cpm, revenue, success, failures
     try:
+        proxy_url = f"{protocol}://{proxy}"
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, proxy=f"http://{proxy}", headers=generate_headers(), timeout=10) as response:
+            async with session.get(url, proxy=proxy_url, headers=generate_headers(), timeout=10) as response:
                 impressions += 1
                 success += 1
                 if response.status == 200:
@@ -144,30 +165,30 @@ async def make_request_with_proxy(proxy):
         failures += 1
         print(f"Failed with proxy {proxy}: {e}")
 
-# Main function to loop through proxies and perform requests
+# Main logic
 async def main():
     global revenue, metrics_history
 
-    # Simulate revenue (e.g., $0.01 per click)
-    revenue_per_click = 0.01
+    revenue_per_click = 0.01  # Simulate revenue per click
 
-    # Load proxies from APIs
-    geonode_proxies = await get_geonode_proxies()
-    proxyscrape_proxies = await get_proxyscrape_proxies()
+    # Load and validate proxies
+    all_proxies = []
+    for name, source in proxy_sources.items():
+        proxies = await fetch_proxies(source)
+        all_proxies.extend(proxies)
 
-    all_proxies = geonode_proxies + proxyscrape_proxies
+    print(f"Total proxies fetched: {len(all_proxies)}")
 
-    # Validate proxies asynchronously
-    tasks = [validate_proxy(p) for p in all_proxies]
-    valid_proxies = [p for p, valid in zip(all_proxies, await asyncio.gather(*tasks)) if valid]
-
+    # Validate proxies
+    tasks = [validate_proxy(proxy, protocol) for protocol, proxy in all_proxies]
+    valid_proxies = [proxy for proxy, valid in zip(all_proxies, await asyncio.gather(*tasks)) if valid]
     print(f"Total valid proxies: {len(valid_proxies)}")
 
-    for proxy in valid_proxies:
-        await make_request_with_proxy(proxy)
+    for protocol, proxy in valid_proxies:
+        await make_request_with_proxy(proxy, protocol)
         revenue = clicks * revenue_per_click
 
-        # Save current metrics to history
+        # Save metrics
         metrics_history.append({
             "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             "impressions": impressions,
@@ -177,14 +198,13 @@ async def main():
             "revenue": revenue
         })
 
-        # Update logs and graph
+        # Update logs and graphs
         update_markdown_log()
         plot_metrics()
 
-        # Print current metrics
         print(f"Metrics: Impressions={impressions}, Clicks={clicks}, CTR={ctr:.2f}%, CPM={cpm:.2f}, Revenue=${revenue:.2f}")
 
-        # Sleep between requests to avoid detection
+        # Sleep between requests
         await asyncio.sleep(random.uniform(1, 3))
 
 if __name__ == "__main__":
