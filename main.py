@@ -107,7 +107,7 @@ def update_markdown_log():
 | Timestamp           |
 """
     for record in metrics_history:
-        log_content += f"| {record['timestamp']} | {record['impressions']} | {record['clicks']} | {record['success']} | {record['failures']} | ${record['revenue']:.2f} |\n"
+        log_content += f""" | {record['timestamp']} | {record['impressions']} | {record['clicks']} | {record['success']} | {record['failures']} | ${record['revenue']:.2f} |\n"""
 
     with open("metrics_report.md", "w") as log_file:
         log_file.write(log_content)
@@ -175,7 +175,7 @@ async def main():
     # Validate proxies asynchronously
     proxies = [p for p in all_proxies if await validate_proxy(p)]
 
-    for proxy in tqdm(proxies, desc="Processing proxies"):
+    for proxy in proxies:
         await make_request_with_proxy(proxy)
         revenue = clicks * revenue_per_click
 
