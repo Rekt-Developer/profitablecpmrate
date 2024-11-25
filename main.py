@@ -76,8 +76,7 @@ def update_markdown_log():
 |---------------------|-------------|--------|---------|----------|---------|
 """
     for record in metrics_history:
-        log_content += f"| {record['timestamp']} | {record['impressions']} | {record['clicks']} | {record['success']} | {record['failures']} | ${record['revenue']:.2f} |
-"
+        log_content += f"| {record['timestamp']} | {record['impressions']} | {record['clicks']} | {record['success']} | {record['failures']} | ${record['revenue']:.2f} |\n"
 
     with open("metrics_report.md", "w") as log_file:
         log_file.write(log_content)
