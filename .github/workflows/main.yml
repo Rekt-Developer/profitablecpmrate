@@ -21,7 +21,7 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests matplotlib aiohttp
+          pip install requests-html requests colorama matplotlib aiohttp
 
       - name: Run Script
         run: |
