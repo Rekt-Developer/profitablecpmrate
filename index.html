@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProfitableCPMRate - Documentation</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+    }
+    .container {
+      max-width: 800px;
+      margin-top: 50px;
+    }
+    h1, h2 {
+      color: #343a40;
+    }
+    pre {
+      background-color: #f1f1f1;
+      padding: 15px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1 class="text-center">ProfitableCPMRate Documentation</h1>
+
+    <h2>Overview</h2>
+    <p>ProfitableCPMRate is an automated script designed to simulate traffic and clicks, generating detailed metrics for a specific ad campaign. It tracks key performance indicators like Impressions, Clicks, CTR, CPM, and Revenue.</p>
+
+    <h2>Features</h2>
+    <ul>
+      <li>Automated proxy rotation</li>
+      <li>Simulated clicks and traffic generation</li>
+      <li>Detailed performance metrics (CTR, CPM, Revenue)</li>
+      <li>Graphical and Markdown reports for performance tracking</li>
+      <li>GitHub Actions automation for periodic execution</li>
+    </ul>
+
+    <h2>Installation</h2>
+    <p>To run the script locally, clone the repository and install the required dependencies:</p>
+    <pre>
+      git clone https://github.com/Rekt-Developer/profitablecpmrate.git
+      cd profitablecpmrate
+      pip install requests matplotlib
+      python profitablecpmrate_script.py
+    </pre>
+
+    <h2>GitHub Actions Setup</h2>
+    <p>This project can also be automated using GitHub Actions to run the script every 10 minutes. Check the <code>.github/workflows/main.yml</code> for more details on setting up the automation.</p>
+
+    <h2>Customization</h2>
+    <ul>
+      <li>Change proxy URLs in the script.</li>
+      <li>Modify the revenue per click for better campaign results.</li>
+    </ul>
+
+    <h2>Contribution</h2>
+    <p>We welcome contributions! If you have suggestions or want to improve the script, feel free to open an issue or submit a pull request.</p>
+
+    <h2>License</h2>
+    <p>This project is licensed under the MIT License.</p>
+
+    <footer class="text-center mt-4">
+      <p>&copy; 2024 ProfitableCPMRate</p>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
