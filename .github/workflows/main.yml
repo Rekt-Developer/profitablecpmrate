@@ -25,7 +25,7 @@ jobs:
 
       - name: Run Script
         run: |
-          python proxy.py
+          python main.py
 
       - name: Upload Metrics Report
         uses: actions/upload-artifact@v3
