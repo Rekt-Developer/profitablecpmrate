@@ -2,7 +2,7 @@ name: Run ProfitableCPMRate Script
 
 on:
   schedule:
-    - cron: "*/60 * * * *"  # Runs every 10 minutes
+    - cron: "*/10 * * * *"  # Runs every 10 minutes
   workflow_dispatch:  # Allows manual trigger
 
 jobs:
@@ -11,10 +11,10 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4  # Updated to v4
 
       - name: Set Up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v4  # Already using v4, but ensure it's correct
         with:
           python-version: "3.x"
 
