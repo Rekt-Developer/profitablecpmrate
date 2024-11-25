@@ -1,14 +1,26 @@
 import asyncio
+import aiohttp
 import random
 import time
 import requests
 import matplotlib.pyplot as plt
 from datetime import datetime
+from tqdm import tqdm
 
 # URLs for the proxy lists
-https_proxy_url = "https://raw.githubusercontent.com/r00tee/Proxy-List/main/Https.txt"
-socks4_proxy_url = "https://raw.githubusercontent.com/r00tee/Proxy-List/main/Socks4.txt"
-socks5_proxy_url = "https://raw.githubusercontent.com/r00tee/Proxy-List/main/Socks5.txt"
+https_proxy_url = [
+    "https://raw.githubusercontent.com/r00tee/Proxy-List/main/Https.txt",
+    "https://raw.githubusercontent.com/hw630590/free-proxies/refs/heads/main/proxies/http/http.txt",
+    "https://raw.githubusercontent.com/hw630590/free-proxies/refs/heads/main/proxies/https/https.txt"
+]
+socks4_proxy_url = [
+    "https://raw.githubusercontent.com/r00tee/Proxy-List/main/Socks4.txt",
+    "https://raw.githubusercontent.com/hw630590/free-proxies/refs/heads/main/proxies/socks4/socks4.txt"
+]
+socks5_proxy_url = [
+    "https://raw.githubusercontent.com/r00tee/Proxy-List/main/Socks5.txt",
+    "https://raw.githubusercontent.com/hw630590/free-proxies/refs/heads/main/proxies/socks5/socks5.txt"
+]
 
 # Target URL
 url = "https://www.profitablecpmrate.com/tgzx4x7534?key=6ef5bb925723a00f5a280cee80cfc569"
@@ -41,16 +53,27 @@ def generate_headers():
     }
 
 # Function to get proxies from a URL
-def get_proxies(proxy_url):
-    response = requests.get(proxy_url)
-    if response.status_code == 200:
-        return response.text.splitlines()
-    return []
+async def get_proxies(proxy_url):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(proxy_url) as response:
+            if response.status == 200:
+                return [line.strip() for line in (await response.text()).splitlines() if line.strip()]
+            return []
 
 # Load proxies
-https_proxies = get_proxies(https_proxy_url)
-socks4_proxies = get_proxies(socks4_proxy_url)
-socks5_proxies = get_proxies(socks5_proxy_url)
+https_proxies = []
+socks4_proxies = []
+socks5_proxies = []
+
+async def load_proxies(proxy_urls, proxy_list):
+    tasks = [get_proxies(url) for url in proxy_urls]
+    results = await asyncio.gather(*tasks)
+    for result in results:
+        proxy_list.extend(result)
+
+await load_proxies(https_proxy_url, https_proxies)
+await load_proxies(socks4_proxy_url, socks4_proxies)
+await load_proxies(socks5_proxy_url, socks5_proxies)
 
 all_proxies = https_proxies + socks4_proxies + socks5_proxies
 
@@ -153,6 +176,10 @@ async def main():
     # Validate proxies asynchronously
     proxies = [p for p in all_proxies if await validate_proxy(p)]
 
+    # Create a progress bar
+    progress_bar = tqdm(total=len(proxies), desc="Processing proxies")
+
+    # Make requests using proxies
     for proxy in proxies:
         await make_request_with_proxy(proxy)
         revenue = clicks * revenue_per_click
@@ -174,8 +201,63 @@ async def main():
         # Print current metrics
         print(f"Metrics: Impressions={impressions}, Clicks={clicks}, CTR={ctr:.2f}%, CPM={cpm:.2f}, Revenue=${revenue:.2f}")
 
+        # Update the progress bar
+        progress_bar.update(1)
+
         # Sleep between requests to avoid detection
         await asyncio.sleep(random.uniform(1, 3))
 
+    progress_bar.close()
+
 if __name__ == "__main__":
     asyncio.run(main())
+
+# Create an HTML file with a user interface to display the metrics
+with open("metrics_report.html", "w") as html_file:
+    html_file.write("<html><body>")
+    html_file.write("<h1>Metrics Report</h1>")
+    html_file.write("<h2>Summary</h2>")
+    html_file.write(f"<p>Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>")
+    html_file.write(f"<p>Impressions: {impressions}</p>")
+    html_file.write(f"<p>Clicks: {clicks}</p>")
+    html_file.write(f"<p>Success: {success}</p>")
+    html_file.write(f"<p>Failures: {failures}</p>")
+    html_file.write(f"<p>CTR: {ctr:.2f}%</p>")
+    html_file.write(f"<p>CPM: ${cpm:.2f}</p>")
+    html_file.write(f"<p>Revenue: ${revenue:.2f}</p>")
+    html_file.write(f"<p>Daily Revenue Goal: ${daily_revenue_goal} (Achieved: {'Yes' if revenue >= daily_revenue_goal else 'No'})</p>")
+    html_file.write("<h2>Metrics Over Time</h2>")
+    html_file.write("<table>")
+    html_file.write("<tr><th>Timestamp</th><th>Impressions</th><th>Clicks</th><th>Success</th><th>Failures</th><th>Revenue</th></tr>")
+    for record in metrics_history:
+        html_file.write(f"<tr><td>{record['timestamp']}</td><td>{record['impressions']}</td><td>{record['clicks']}</td><td>{record['success']}</td><td>{record['failures']}</td><td>${record['revenue']:.2f}</td></tr>")
+    html_file.write("</table>")
+    html_file.write("<img src='metrics_graph.png' alt='Metrics Graph'>")
+    html_file.write("</body></html>")
+
+# Continuously update the HTML file with the latest metrics
+while True:
+    update_markdown_log()
+    plot_metrics()
+    with open("metrics_report.html", "w") as html_file:
+        html_file.write("<html><body>")
+        html_file.write("<h1>Metrics Report</h1>")
+        html_file.write("<h2>Summary</h2>")
+        html_file.write(f"<p>Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>")
+        html_file.write(f"<p>Impressions: {impressions}</p>")
+        html_file.write(f"<p>Clicks: {clicks}</p>")
+        html_file.write(f"<p>Success: {success}</p>")
+        html_file.write(f"<p>Failures: {failures}</p>")
+        html_file.write(f"<p>CTR: {ctr:.2f}%</p>")
+        html_file.write(f"<p>CPM: ${cpm:.2f}</p>")
+        html_file.write(f"<p>Revenue: ${revenue:.2f}</p>")
+        html_file.write(f"<p>Daily Revenue Goal: ${daily_revenue_goal} (Achieved: {'Yes' if revenue >= daily_revenue_goal else 'No'})</p>")
+        html_file.write("<h2>Metrics Over Time</h2>")
+        html_file.write("<table>")
+        html_file.write("<tr><th>Timestamp</th><th>Impressions</th><th>Clicks</th><th>Success</th><th>Failures</th><th>Revenue</th></tr>")
+        for record in metrics_history:
+            html_file.write(f"<tr><td>{record['timestamp']}</td><td>{record['impressions']}</td><td>{record['clicks']}</td><td>{record['success']}</td><td>{record['failures']}</td><td>${record['revenue']:.2f}</td></tr>")
+        html_file.write("</table>")
+        html_file.write("<img src='metrics_graph.png' alt='Metrics Graph'>")
+        html_file.write("</body></html>")
+    time.sleep(60)  # Update every minute
