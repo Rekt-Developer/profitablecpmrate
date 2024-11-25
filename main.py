@@ -2,7 +2,6 @@ import requests
 import random
 import time
 import matplotlib.pyplot as plt
-import os
 from datetime import datetime
 
 # URLs for the proxy lists
@@ -13,7 +12,7 @@ socks5_proxy_url = "https://raw.githubusercontent.com/r00tee/Proxy-List/main/Soc
 # Target URL
 url = "https://www.profitablecpmrate.com/tgzx4x7534?key=6ef5bb925723a00f5a280cee80cfc569"
 
-# Metrics
+# Metrics initialization
 impressions = 0
 clicks = 0
 success = 0
@@ -47,11 +46,10 @@ def get_proxies(proxy_url):
         return response.text.splitlines()
     return []
 
-# Load proxies
+# Load proxies from sources
 https_proxies = get_proxies(https_proxy_url)
 socks4_proxies = get_proxies(socks4_proxy_url)
 socks5_proxies = get_proxies(socks5_proxy_url)
-
 all_proxies = https_proxies + socks4_proxies + socks5_proxies
 
 # Function to update the Markdown log file
