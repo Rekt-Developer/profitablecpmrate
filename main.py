@@ -104,8 +104,10 @@ def update_markdown_log():
 - **Daily Revenue Goal:** ${daily_revenue_goal} (Achieved: {'Yes' if revenue >= daily_revenue_goal else 'No'})
 
 ## Metrics Over Time
-| Timestamp           |
+| Timestamp           | Impressions | Clicks | Success | Failures | Revenue |
+|---------------------|-------------|--------|---------|----------|---------|
 """
+
     for record in metrics_history:
         log_content += f""" | {record['timestamp']} | {record['impressions']} | {record['clicks']} | {record['success']} | {record['failures']} | ${record['revenue']:.2f} |\n"""
 
