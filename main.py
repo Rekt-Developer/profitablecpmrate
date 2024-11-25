@@ -71,17 +71,12 @@ async def load_proxies(proxy_urls, proxy_list):
     for result in results:
         proxy_list.extend(result)
 
-await load_proxies(https_proxy_url, https_proxies)
-await load_proxies(socks4_proxy_url, socks4_proxies)
-await load_proxies(socks5_proxy_url, socks5_proxies)
-
-all_proxies = https_proxies + socks4_proxies + socks5_proxies
-
 # Function to validate proxy (async)
 async def validate_proxy(proxy):
     try:
-        response = await asyncio.to_thread(requests.get, url, proxies={"http": f"http://{proxy}", "https": f"http://{proxy}"}, headers=generate_headers(), timeout=10)
-        return response.status_code == 200
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, proxy=f"http://{proxy}", headers=generate_headers(), timeout=10) as response:
+                return response.status == 200
     except Exception as e:
         print(f"Failed to validate proxy {proxy}: {e}")
         return False
@@ -109,7 +104,7 @@ def update_markdown_log():
 """
 
     for record in metrics_history:
-        log_content += f""" | {record['timestamp']} | {record['impressions']} | {record['clicks']} | {record['success']} | {record['failures']} | ${record['revenue']:.2f} |\n"""
+        log_content += f"""| {record['timestamp']} | {record['impressions']} | {record['clicks']} | {record['success']} | {record['failures']} | ${record['revenue']:.2f} |\n"""
 
     with open("metrics_report.md", "w") as log_file:
         log_file.write(log_content)
@@ -144,20 +139,17 @@ def plot_metrics():
 async def make_request_with_proxy(proxy):
     global impressions, clicks, ctr, cpm, revenue, success, failures
     try:
-        proxies = {
-            "http": f"http://{proxy}",
-            "https": f"http://{proxy}"
-        }
-        response = await asyncio.to_thread(requests.get, url, proxies=proxies, headers=generate_headers(), timeout=10)
-        impressions += 1
-        success += 1
-        if response.status_code == 200:
-            print(f"Impression logged with proxy: {proxy}")
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, proxy=f"http://{proxy}", headers=generate_headers(), timeout=10) as response:
+                impressions += 1
+                success += 1
+                if response.status == 200:
+                    print(f"Impression logged with proxy: {proxy}")
 
-            # Simulate a random click (20% chance of click)
-            if random.random() < 0.2:
-                clicks += 1
-                print(f"Click registered with proxy: {proxy}")
+                    # Simulate a random click (20% chance of click)
+                    if random.random() < 0.2:
+                        clicks += 1
+                        print(f"Click registered with proxy: {proxy}")
 
         # Update metrics
         ctr = (clicks / impressions) * 100 if impressions > 0 else 0
@@ -174,10 +166,18 @@ async def main():
     # Simulate revenue (e.g., $0.01 per click)
     revenue_per_click = 0.01
 
-    # Validate proxies asynchronously
-    proxies = [p for p in all_proxies if await validate_proxy(p)]
+    # Load proxies
+    await load_proxies(https_proxy_url, https_proxies)
+    await load_proxies(socks4_proxy_url, socks4_proxies)
+    await load_proxies(socks5_proxy_url, socks5_proxies)
 
-    for proxy in proxies:
+    all_proxies = https_proxies + socks4_proxies + socks5_proxies
+
+    # Validate proxies asynchronously
+    tasks = [validate_proxy(p) for p in all_proxies]
+    valid_proxies = [p for p, valid in zip(all_proxies, await asyncio.gather(*tasks)) if valid]
+
+    for proxy in valid_proxies:
         await make_request_with_proxy(proxy)
         revenue = clicks * revenue_per_click
 
