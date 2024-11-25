@@ -1,7 +1,7 @@
 import asyncio
 import random
-import aiohttp
-import logging
+import time
+import requests
 import matplotlib.pyplot as plt
 from datetime import datetime
 
@@ -13,7 +13,7 @@ socks5_proxy_url = "https://raw.githubusercontent.com/r00tee/Proxy-List/main/Soc
 # Target URL
 url = "https://www.profitablecpmrate.com/tgzx4x7534?key=6ef5bb925723a00f5a280cee80cfc569"
 
-# Metrics initialization
+# Metrics
 impressions = 0
 clicks = 0
 success = 0
@@ -23,10 +23,6 @@ cpm = 0.0
 revenue = 0.0
 metrics_history = []
 daily_revenue_goal = 50.0
-
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 # Browser-like headers for requests
 def generate_headers():
@@ -41,57 +37,31 @@ def generate_headers():
         "Accept-Language": "en-US,en;q=0.5",
         "Connection": "keep-alive",
         "Upgrade-Insecure-Requests": "1",
-        "Referer": "https://www.google.com/",
+        "Referer": "https://www.google.com",
     }
 
 # Function to get proxies from a URL
-async def get_proxies(proxy_url):
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(proxy_url) as response:
-                if response.status == 200:
-                    proxies = await response.text()
-                    logger.info(f"Successfully fetched proxies from {proxy_url}")
-                    return proxies.splitlines()
-    except Exception as e:
-        logger.error(f"Error fetching proxies from {proxy_url}: {e}")
+def get_proxies(proxy_url):
+    response = requests.get(proxy_url)
+    if response.status_code == 200:
+        return response.text.splitlines()
     return []
 
-# Function to validate proxies by making a test request
+# Load proxies
+https_proxies = get_proxies(https_proxy_url)
+socks4_proxies = get_proxies(socks4_proxy_url)
+socks5_proxies = get_proxies(socks5_proxy_url)
+
+all_proxies = https_proxies + socks4_proxies + socks5_proxies
+
+# Function to validate proxy (async)
 async def validate_proxy(proxy):
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=generate_headers(), proxy=f"http://{proxy}", timeout=10) as response:
-                if response.status == 200:
-                    return True
-                else:
-                    return False
+        response = await asyncio.to_thread(requests.get, url, proxies={"http": f"http://{proxy}", "https": f"http://{proxy}"}, headers=generate_headers(), timeout=10)
+        return response.status_code == 200
     except Exception as e:
-        logger.error(f"Failed to connect with proxy {proxy}: {e}")
+        print(f"Failed to validate proxy {proxy}: {e}")
         return False
-
-# Function to make a request using a proxy
-async def make_request_with_proxy(proxy):
-    global impressions, clicks, ctr, cpm, revenue, success, failures
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=generate_headers(), proxy=f"http://{proxy}", timeout=10) as response:
-                impressions += 1
-                if response.status == 200:
-                    success += 1
-                    logger.info(f"Impression logged with proxy: {proxy}")
-                    # Simulate a random click (20% chance of click)
-                    if random.random() < 0.2:
-                        clicks += 1
-                        logger.info(f"Click registered with proxy: {proxy}")
-                else:
-                    failures += 1
-                    logger.error(f"Request failed with proxy: {proxy} (status code: {response.status})")
-        ctr = (clicks / impressions) * 100 if impressions > 0 else 0
-        cpm = (revenue / impressions) * 1000 if impressions > 0 else 0
-    except Exception as e:
-        failures += 1
-        logger.error(f"Error with proxy {proxy}: {e}")
 
 # Function to update the Markdown log file
 def update_markdown_log():
@@ -146,6 +116,33 @@ def plot_metrics():
     plt.savefig("metrics_graph.png")
     plt.close()
 
+# Function to make a request using a proxy
+async def make_request_with_proxy(proxy):
+    global impressions, clicks, ctr, cpm, revenue, success, failures
+    try:
+        proxies = {
+            "http": f"http://{proxy}",
+            "https": f"http://{proxy}"
+        }
+        response = await asyncio.to_thread(requests.get, url, proxies=proxies, headers=generate_headers(), timeout=10)
+        impressions += 1
+        success += 1
+        if response.status_code == 200:
+            print(f"Impression logged with proxy: {proxy}")
+
+            # Simulate a random click (20% chance of click)
+            if random.random() < 0.2:
+                clicks += 1
+                print(f"Click registered with proxy: {proxy}")
+
+        # Update metrics
+        ctr = (clicks / impressions) * 100 if impressions > 0 else 0
+        cpm = (revenue / impressions) * 1000 if impressions > 0 else 0
+
+    except Exception as e:
+        failures += 1
+        print(f"Failed with proxy {proxy}: {e}")
+
 # Main function to loop through proxies and perform requests
 async def main():
     global revenue, metrics_history
@@ -153,23 +150,13 @@ async def main():
     # Simulate revenue (e.g., $0.01 per click)
     revenue_per_click = 0.01
 
-    proxies = await get_proxies(https_proxy_url) + await get_proxies(socks4_proxy_url) + await get_proxies(socks5_proxy_url)
-    proxies = list(filter(lambda p: asyncio.run(validate_proxy(p)), proxies))
+    # Validate proxies asynchronously
+    proxies = [p for p in all_proxies if await validate_proxy(p)]
 
-    if not proxies:
-        logger.error("No valid proxies found!")
-        return
+    for proxy in proxies:
+        await make_request_with_proxy(proxy)
+        revenue = clicks * revenue_per_click
 
-    tasks = []
-    for proxy in random.sample(proxies, len(proxies)):
-        tasks.append(make_request_with_proxy(proxy))
-    
-    await asyncio.gather(*tasks)
-
-    # Update metrics
-    revenue = clicks * revenue_per_click
-
-    for proxy in random.sample(proxies, len(proxies)):
         # Save current metrics to history
         metrics_history.append({
             "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -185,7 +172,7 @@ async def main():
         plot_metrics()
 
         # Print current metrics
-        logger.info(f"Metrics: Impressions={impressions}, Clicks={clicks}, CTR={ctr:.2f}%, CPM={cpm:.2f}, Revenue=${revenue:.2f}")
+        print(f"Metrics: Impressions={impressions}, Clicks={clicks}, CTR={ctr:.2f}%, CPM={cpm:.2f}, Revenue=${revenue:.2f}")
 
         # Sleep between requests to avoid detection
         await asyncio.sleep(random.uniform(1, 3))
